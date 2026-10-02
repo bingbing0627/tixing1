@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>梯形面积 · 拖动顶点 · 小学数学</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            user-select: none;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            background: linear-gradient(145deg, #fff9e6 0%, #ffe6f0 100%);
+            font-family: 'Comic Sans MS', 'Chalkboard SE', '幼圆', 'Yuanti SC', 'Segoe UI', Roboto, sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 12px;
+        }
+
+        .app {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(8px);
+            border-radius: 50px;
+            box-shadow: 0 20px 40px -10px rgba(255, 140, 180, 0.4), 0 8px 20px rgba(255, 200, 120, 0.3), inset 0 2px 8px #ffffff;
+            padding: 24px 28px 28px 28px;
+            width: fit-content;
+            max-width: 100%;
+            border: 4px solid #ffe8b0;
+        }
+
+        h1 {
+            margin: 0 0 12px 0;
+            font-size: 2rem;
+            font-weight: 700;
+            color: #ff6b9d;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            letter-spacing: 1px;
+            text-shadow: 3px 3px 0 #ffe0b0;
+            justify-content: center;
+        }
+
+        h1 span {
+            background: #ffd966;
+            font-size: 1rem;
+            font-weight: 600;
+            padding: 6px 16px;
+            border-radius: 50px;
+            color: #b34a7a;
+            text-shadow: none;
+            border: 2px dashed #ffb3c6;
+            box-shadow: 0 4px 0 #e6a8b8;
+        }
+
+        .canvas-container {
+            background: #ffffff;
+            border-radius: 40px;
+            box-shadow: inset 0 8px 12px rgba(255, 200, 220, 0.2), 0 15px 25px -8px rgba(255, 160, 180, 0.5);
+            padding: 8px;
+            display: inline-block;
+            line-height: 0;
+            border: 4px solid #ffe0a3;
+        }
+
+        canvas {
+            display: block;
+            width: 640px;
+            height: 480px;
+            border-radius: 32px;
+            background: #fffef9;
+            cursor: crosshair;
+            touch-action: none;
+        }
+
+        .info-panel {
+            margin-top: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #ffffffdd;
+            border-radius: 60px;
+            padding: 12px 24px;
+            backdrop-filter: blur(4px);
+            box-shadow: 0 8px 0 #ffe0b0, 0 12px 20px -8px #ffb0c0;
+            border: 2px solid #ffd966;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .area-box {
+            display: flex;
+            align-items: baseline;
+            gap: 8px;
+            font-size: 1.2rem;
+            color: #7b3f5e;
+            font-weight: 600;
+            background: #fff0f5;
+            padding: 6px 20px;
+            border-radius: 50px;
+            border: 2px solid #ffb6c1;
+        }
+
+        .area-value {
+            font-size: 2rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #ff6b9d, #ff9f4b);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            margin-left: 6px;
+            min-width: 100px;
+            display: inline-block;
+            text-shadow: 2px 2px 0 #ffeeaa;
+            letter-spacing: 1px;
+        }
+
+        .hint {
+            color: #b05a7a;
+            font-size: 0.95rem;
+            background: #ffe8b0;
+            padding: 8px 18px;
+            border-radius: 50px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 600;
+            border: 2px dashed #ffaa66;
+            box-shadow: 0 4px 0 #e6b86a;
+        }
+
+        .hint i {
+            font-style: normal;
+            font-size: 1.3rem;
+        }
+
+        button {
+            background: #a3d8f4;
+            border: none;
+            font-size: 1rem;
+            font-weight: 700;
+            padding: 10px 24px;
+            border-radius: 50px;
+            color: #1a476b;
+            cursor: pointer;
+            box-shadow: 0 6px 0 #6fa8c9, 0 8px 12px rgba(100, 160, 200, 0.3);
+            transition: all 0.08s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-family: inherit;
+            border: 2px solid #c2e4ff;
+            letter-spacing: 0.5px;
+        }
+
+        button:hover {
+            background: #b8e2ff;
+            transform: translateY(-1px);
+            box-shadow: 0 7px 0 #6fa8c9, 0 10px 15px rgba(100, 160, 200, 0.4);
+        }
+
+        button:active {
+            transform: translateY(5px);
+            box-shadow: 0 1px 0 #6fa8c9, 0 5px 10px rgba(100, 160, 200, 0.3);
+        }
+
+        /* 移动端适配 */
+        @media (max-width: 720px) {
+            .app {
+                padding: 16px;
+                border-radius: 40px;
+            }
+            canvas {
+                width: 100%;
+                height: auto;
+                aspect-ratio: 640 / 480;
+            }
+            .info-panel {
+                flex-direction: column;
+                align-items: stretch;
+                border-radius: 30px;
+            }
+            .area-box, .hint, button {
+                justify-content: center;
+            }
+            h1 {
+                font-size: 1.6rem;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="app">
+    <h1>
+        🎨 梯形面积
+        <span>拖拖看！</span>
+    </h1>
+    <div class="canvas-container">
+        <canvas id="trapezoidCanvas" width="640" height="480"></canvas>
+    </div>
+    <div class="info-panel">
+        <div class="area-box">
+            <span>✨ 面积 =</span>
+            <span class="area-value" id="areaDisplay">0.00</span>
+        </div>
+        <div class="hint">
+            <i>✋</i> 拖动四个彩色圆点
+        </div>
+        <button id="resetBtn">
+            <span>🔄</span> 重置
+        </button>
+    </div>
+</div>
+<script>
+    (function() {
+        const canvas = document.getElementById('trapezoidCanvas');
+        const ctx = canvas.getContext('2d');
+        const areaDisplay = document.getElementById('areaDisplay');
+
+        // 画布逻辑尺寸
+        const W = 640, H = 480;
+
+        // 初始梯形顶点 (左上, 右上, 右下, 左下) — 适合小学生的规则梯形
+        let points = [
+            { x: 200, y: 120 }, // A 左上
+            { x: 440, y: 120 }, // B 右上
+            { x: 540, y: 360 }, // C 右下
+            { x: 100, y: 360 }  // D 左下
+        ];
+
+        // 拖动状态
+        let draggingIndex = -1;
+        let dragOffsetX = 0, dragOffsetY = 0;
+
+        // 圆点半径 (视觉更大更友好)
+        const RADIUS = 14;
+        const HIT_RADIUS = 24;  // 更宽松的点击区域，方便小朋友
+
+        // 备份初始点
+        const initialPoints = points.map(p => ({ x: p.x, y: p.y }));
+
+        // 鲜艳配色 (每个顶点不同颜色, 便于区分)
+        const vertexColors = [
+            '#FF6B9D', // 粉红 A
+            '#FFB347', // 橙色 B
+            '#4ECDC4', // 青绿 C
+            '#A37BFF'  // 紫色 D
+        ];
+        const vertexStroke = [
+            '#D94A7A',
+            '#E6952E',
+            '#2FA8A0',
+            '#8256D0'
+        ];
+
+        // ---------- 面积计算 (鞋带公式) ----------
+        function computeArea(points) {
+            let area = 0;
+            const n = points.length;
+            for (let i = 0; i < n; i++) {
+                const j = (i + 1) % n;
+                area += points[i].x * points[j].y;
+                area -= points[j].x * points[i].y;
+            }
+            return Math.abs(area) / 2;
+        }
+
+        function updateAreaDisplay() {
+            const area = computeArea(points);
+            areaDisplay.textContent = area.toFixed(2);
+        }
+
+        // ---------- 绘制 (明亮卡通风) ----------
+        function draw() {
+            ctx.clearRect(0, 0, W, H);
+
+            // 1. 绘制彩色背景网格 (更柔和)
+            ctx.save();
+            ctx.strokeStyle = "#ffe0b0";
+            ctx.lineWidth = 1.5;
+            ctx.globalAlpha = 0.5;
+            const step = 40;
+            for (let x = 0; x <= W; x += step) {
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, H);
+                ctx.strokeStyle = "#ffe0b0";
+                ctx.stroke();
+            }
+            for (let y = 0; y <= H; y += step) {
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(W, y);
+                ctx.strokeStyle = "#ffe0b0";
+                ctx.stroke();
+            }
+            ctx.restore();
+
+            // 2. 绘制梯形填充 (明亮渐变)
+            ctx.beginPath();
+            ctx.moveTo(points[0].x, points[0].y);
+            ctx.lineTo(points[1].x, points[1].y);
+            ctx.lineTo(points[2].x, points[2].y);
+            ctx.lineTo(points[3].x, points[3].y);
+            ctx.closePath();
+
+            const gradient = ctx.createLinearGradient(0, 0, W, H);
+            gradient.addColorStop(0, "rgba(255, 220, 120, 0.45)");
+            gradient.addColorStop(0.5, "rgba(255, 160, 200, 0.35)");
+            gradient.addColorStop(1, "rgba(160, 220, 255, 0.4)");
+            ctx.fillStyle = gradient;
+            ctx.fill();
+
+            // 3. 绘制梯形边框 (粗线条, 圆角)
+            ctx.beginPath();
+            ctx.moveTo(points[0].x, points[0].y);
+            ctx.lineTo(points[1].x, points[1].y);
+            ctx.lineTo(points[2].x, points[2].y);
+            ctx.lineTo(points[3].x, points[3].y);
+            ctx.closePath();
+            ctx.strokeStyle = "#FF8A5C";
+            ctx.lineWidth = 6;
+            ctx.lineJoin = "round";
+            ctx.lineCap = "round";
+            ctx.stroke();
+
+            // 边框加一层虚线内发光
+            ctx.beginPath();
+            ctx.moveTo(points[0].x, points[0].y);
+            ctx.lineTo(points[1].x, points[1].y);
+            ctx.lineTo(points[2].x, points[2].y);
+            ctx.lineTo(points[3].x, points[3].y);
+            ctx.closePath();
+            ctx.strokeStyle = "#FFF5C4";
+            ctx.lineWidth = 2.5;
+            ctx.stroke();
+
+            // 4. 绘制四个顶点 (彩色糖果圆点)
+            points.forEach((p, idx) => {
+                // 大外发光 (让拖动点更明显)
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, RADIUS + 6, 0, Math.PI * 2);
+                ctx.fillStyle = "#ffffffcc";
+                ctx.shadowColor = vertexColors[idx] + "aa";
+                ctx.shadowBlur = 20;
+                ctx.fill();
+
+                // 主圆 (彩色)
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, RADIUS, 0, Math.PI * 2);
+                if (idx === draggingIndex) {
+                    ctx.fillStyle = "#FFD966"; // 拖动时变成亮黄色
+                    ctx.shadowColor = "#FFB800";
+                    ctx.shadowBlur = 28;
+                } else {
+                    ctx.fillStyle = vertexColors[idx];
+                    ctx.shadowColor = vertexStroke[idx] + "cc";
+                    ctx.shadowBlur = 16;
+                }
+                ctx.fill();
+
+                // 加一个深色边框 (让圆点更立体)
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, RADIUS, 0, Math.PI * 2);
+                ctx.strokeStyle = "#ffffff";
+                ctx.lineWidth = 3;
+                ctx.stroke();
+
+                // 内圈高光 (糖果感)
+                ctx.beginPath();
+                ctx.arc(p.x - 4, p.y - 4, 5, 0, Math.PI * 2);
+                ctx.fillStyle = "#ffffffdd";
+                ctx.shadowBlur = 8;
+                ctx.fill();
+
+                // 重置阴影
+                ctx.shadowColor = "transparent";
+                ctx.shadowBlur = 0;
+
+                // 绘制字母标签 (可爱风格)
+                const labels = ["A", "B", "C", "D"];
+                ctx.font = "bold 20px 'Comic Sans MS', 'Chalkboard SE', '幼圆', 'Yuanti SC', sans-serif";
+                ctx.fillStyle = "#5E3A4A";
+                ctx.shadowColor = "#ffffff";
+                ctx.shadowBlur = 8;
+                ctx.fillText(labels[idx], p.x + 22, p.y - 18);
+                ctx.shadowColor = "transparent";
+            });
+
+            // 5. 在画布左上角画一个大大的面积数值 (有趣风格)
+            const area = computeArea(points);
+            // 画一个圆角矩形底衬
+            ctx.shadowColor = "#FFD0A0";
+            ctx.shadowBlur = 20;
+            ctx.fillStyle = "#FFF9E6ee";
+            ctx.beginPath();
+            ctx.roundRect(30, 30, 240, 70, 35);
+            ctx.fill();
+            ctx.shadowColor = "transparent";
+            ctx.strokeStyle = "#FFB347";
+            ctx.lineWidth = 4;
+            ctx.stroke();
+
+            ctx.font = "bold 32px 'Comic Sans MS', 'Chalkboard SE', '幼圆', 'Yuanti SC', sans-serif";
+            ctx.fillStyle = "#FF6B9D";
+            ctx.shadowColor = "#ffffff";
+            ctx.shadowBlur = 10;
+            ctx.fillText(`面积 = ${area.toFixed(2)}`, 52, 82);
+            ctx.shadowColor = "transparent";
+        }
+
+        // 工具：canvas roundRect 方法
+        CanvasRenderingContext2D.prototype.roundRect = function(x, y, w, h, r) {
+            if (w < 2 * r) r = w / 2;
+            if (h < 2 * r) r = h / 2;
+            this.moveTo(x + r, y);
+            this.lineTo(x + w - r, y);
+            this.quadraticCurveTo(x + w, y, x + w, y + r);
+            this.lineTo(x + w, y + h - r);
+            this.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+            this.lineTo(x + r, y + h);
+            this.quadraticCurveTo(x, y + h, x, y + h - r);
+            this.lineTo(x, y + r);
+            this.quadraticCurveTo(x, y, x + r, y);
+            return this;
+        };
+
+        function updateAll() {
+            draw();
+            updateAreaDisplay();
+        }
+
+        // ---------- 坐标转换 ----------
+        function getCanvasCoords(e) {
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = W / rect.width;
+            const scaleY = H / rect.height;
+
+            let clientX, clientY;
+
+            if (e.touches) {
+                if (e.touches.length === 0) return null;
+                clientX = e.touches[0].clientX;
+                clientY = e.touches[0].clientY;
+                e.preventDefault();
+            } else {
+                clientX = e.clientX;
+                clientY = e.clientY;
+            }
+
+            const relativeX = clientX - rect.left;
+            const relativeY = clientY - rect.top;
+
+            return {
+                x: relativeX * scaleX,
+                y: relativeY * scaleY
+            };
+        }
+
+        function findPointIndex(coords) {
+            if (!coords) return -1;
+            for (let i = points.length - 1; i >= 0; i--) {
+                const p = points[i];
+                const dx = coords.x - p.x;
+                const dy = coords.y - p.y;
+                const dist = Math.sqrt(dx*dx + dy*dy);
+                if (dist <= HIT_RADIUS) {
+                    return i;
+                }
+            }
+            return -1;
+        }
+
+        // ---------- 事件处理 ----------
+        function onPointerDown(e) {
+            e.preventDefault();
+            const coords = getCanvasCoords(e);
+            if (!coords) return;
+
+            const idx = findPointIndex(coords);
+            if (idx !== -1) {
+                draggingIndex = idx;
+                dragOffsetX = points[idx].x - coords.x;
+                dragOffsetY = points[idx].y - coords.y;
+                canvas.style.cursor = 'grabbing';
+                draw();
+            }
+        }
+
+        function onPointerMove(e) {
+            if (draggingIndex === -1) {
+                const coords = getCanvasCoords(e);
+                if (coords) {
+                    const idx = findPointIndex(coords);
+                    canvas.style.cursor = idx !== -1 ? 'grab' : 'crosshair';
+                }
+                return;
+            }
+
+            e.preventDefault();
+            const coords = getCanvasCoords(e);
+            if (!coords) return;
+
+            let newX = coords.x + dragOffsetX;
+            let newY = coords.y + dragOffsetY;
+
+            const MARGIN = 15;
+            newX = Math.min(W - MARGIN, Math.max(MARGIN, newX));
+            newY = Math.min(H - MARGIN, Math.max(MARGIN, newY));
+
+            points[draggingIndex].x = newX;
+            points[draggingIndex].y = newY;
+
+            updateAll();
+        }
+
+        function onPointerUp(e) {
+            if (draggingIndex !== -1) {
+                draggingIndex = -1;
+                canvas.style.cursor = 'crosshair';
+                updateAll();
+            } else {
+                const coords = getCanvasCoords(e);
+                if (coords) {
+                    const idx = findPointIndex(coords);
+                    canvas.style.cursor = idx !== -1 ? 'grab' : 'crosshair';
+                } else {
+                    canvas.style.cursor = 'crosshair';
+                }
+            }
+        }
+
+        function onPointerLeave(e) {
+            if (draggingIndex !== -1) {
+                draggingIndex = -1;
+                canvas.style.cursor = 'crosshair';
+                updateAll();
+            } else {
+                canvas.style.cursor = 'crosshair';
+            }
+        }
+
+        function resetPoints() {
+            points = initialPoints.map(p => ({ x: p.x, y: p.y }));
+            draggingIndex = -1;
+            canvas.style.cursor = 'crosshair';
+            updateAll();
+        }
+
+        // 绑定事件
+        function bindEvents() {
+            canvas.addEventListener('mousedown', onPointerDown);
+            window.addEventListener('mousemove', onPointerMove);
+            window.addEventListener('mouseup', onPointerUp);
+
+            canvas.addEventListener('touchstart', onPointerDown, { passive: false });
+            window.addEventListener('touchmove', onPointerMove, { passive: false });
+            window.addEventListener('touchend', onPointerUp);
+            window.addEventListener('touchcancel', onPointerUp);
+
+            canvas.addEventListener('mouseleave', onPointerLeave);
+
+            document.getElementById('resetBtn').addEventListener('click', resetPoints);
+        }
+
+        function init() {
+            updateAll();
+            bindEvents();
+            canvas.style.cursor = 'crosshair';
+        }
+
+        init();
+    })();
+</script>
+</body>
+</html>
